@@ -50,6 +50,8 @@ global width
 width=128
 global height
 height=64
+global SleepCount
+SleepCount=0
 
 global pageCount
 pageCount=2
@@ -141,11 +143,11 @@ def draw_page():
 
     if page_index==0:
         text = time.strftime("%A")
-        draw.text((2,2),text,font=font14,fill=255)
+        draw.text((25,2),text,font=font14,fill=255)
         text = time.strftime("%e %b %Y")
-        draw.text((2,18),text,font=font14,fill=255)
+        draw.text((10,18),text,font=font14,fill=255)
         text = time.strftime("%X")
-        draw.text((2,40),text,font=fontb24,fill=255)
+        draw.text((2,35),text,font=fontb24,fill=255)
     elif page_index==1:
         # Draw some shapes.
         # First define some constants to allow easy resizing of shapes.
@@ -166,11 +168,18 @@ def draw_page():
             tempI = tempI/1000
         tempStr = "CPU TEMP: %sC" % str(tempI)
 
-        draw.text((x, top+5),       "IP: " + str(IPAddress),  font=smartFont, fill=255)
-        draw.text((x, top+5+12),    str(CPU), font=smartFont, fill=255)
-        draw.text((x, top+5+24),    str(MemUsage),  font=smartFont, fill=255)
-        draw.text((x, top+5+36),    str(Disk),  font=smartFont, fill=255)
-        draw.text((x, top+5+48),    tempStr,  font=smartFont, fill=255)
+#        draw.text((x, top+5),       "IP: " + str(IPAddress),  font=smartFont, fill=255)
+#        draw.text((x, top+5+12),    str(CPU), font=smartFont, fill=255)
+#        draw.text((x, top+5+24),    str(MemUsage),  font=smartFont, fill=255)
+#        draw.text((x, top+5+36),    str(Disk),  font=smartFont, fill=255)
+#        draw.text((x, top+5+48),    tempStr,  font=smartFont, fill=255)
+
+        draw.text((x, top),       "IP: " + str(IPAddress),  font=smartFont, fill=255)
+        draw.text((x, top+12),    str(CPU), font=smartFont, fill=255)
+        draw.text((x, top+24),    str(MemUsage),  font=smartFont, fill=255)
+        draw.text((x, top+36),    str(Disk),  font=smartFont, fill=255)
+        draw.text((x, top+48),    tempStr,  font=smartFont, fill=255)
+
     elif page_index==3: #shutdown -- no
         draw.text((2, 2),  'Shutdown?',  font=fontb14, fill=255)
 
@@ -218,6 +227,7 @@ def update_page_index(pi):
 
 def receive_signal(signum, stack):
     global pageIndex
+    global SleepCount
 
     lock.acquire()
     page_index = pageIndex
@@ -227,6 +237,7 @@ def receive_signal(signum, stack):
         return
 
     if signum == signal.SIGUSR1:
+        SleepCount = 0
         print 'K1 pressed'
         if is_showing_power_msgbox():
             if page_index==3:
@@ -239,6 +250,7 @@ def receive_signal(signum, stack):
             draw_page()
 
     if signum == signal.SIGUSR2:
+        SleepCount = 0
         print 'K2 pressed'
         if is_showing_power_msgbox():
             if page_index==4:
@@ -253,6 +265,7 @@ def receive_signal(signum, stack):
             draw_page()
 
     if signum == signal.SIGALRM:
+        SleepCount = 0
         print 'K3 pressed'
         if is_showing_power_msgbox():
             update_page_index(0)
@@ -260,7 +273,6 @@ def receive_signal(signum, stack):
         else:
             update_page_index(3)
             draw_page()
-
 
 image0 = Image.open('friendllyelec.png').convert('1')
 oled.drawImage(image0)
@@ -297,7 +309,14 @@ while True:
             os.system('systemctl poweroff')
             break
         time.sleep(1)
+#        SleepCount += 1
+#        if (SleepCount == 10) : oled.DisplayOff()
+
     except KeyboardInterrupt:                                                                                                          
         break                     
     except IOError:                                                                              
         print ("Error")
+   
+    SleepCount += 1
+    if (SleepCount > 120) : oled.DisplayOff()
+    if (SleepCount < 120) : oled.DisplayOn()

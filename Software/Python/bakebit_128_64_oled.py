@@ -311,6 +311,12 @@ def setTextXY(Column,Row):
     sendCommand(0x00 + (8*Column & 0x0F))  #set column lower address
     sendCommand(0x10 + ((8*Column>>4)&0x0F))   #set column higher address
 
+def DisplayOff():
+	sendCommand(SeeedOLED_Display_Off_Cmd)   #display off  
+
+def DisplayOn():
+	sendCommand(SeeedOLED_Display_On_Cmd)   #display on
+
 def clearDisplay():
 	sendCommand(SeeedOLED_Display_Off_Cmd)   #display off
 	for j in range(8):
